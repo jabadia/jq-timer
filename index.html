@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Cuenta Atrás</title>
+	<link href="lib/timeTo.css" type="text/css" rel="stylesheet"/>
+	<style>
+		#countdown-1, #endTimeBlock
+		{
+			position: absolute;
+			margin: 0 auto;
+			top: 40%;
+			left: 10%;
+			right: 10%;
+			text-align: center;
+		}
+
+		#endTimeBlock
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 14px;
+			color: #888;
+			top: 30%;
+		}
+	</style>
+</head>
+<body>
+
+	<div id="endTimeBlock" style="display:none;">hasta el <span id="endTime"></span></div>	
+	<div id="countdown-1"></div>
+
+		
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script>window.jQuery || document.write('<script src="lib/jquery-1.9.1.min.js"><\/script>')</script>
+	<script src="lib/jquery.timeTo.js"></script>	
+	<script>
+		function getUrlParams() 
+		{
+		    var match,
+		        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+		        search = /([^&=]+)=?([^&]*)/g,
+		        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+		        query  = window.location.search.substring(1);
+
+		    var urlParams = {};
+		    while (match = search.exec(query))
+		       urlParams[decode(match[1])] = decode(match[2]);
+
+		   return urlParams;
+		};
+
+		function formatDigits(d)
+		{
+			return ( d < 10 )? '0' + d : d;
+		}
+
+		function formatDate(d)
+		{
+			var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+			var str = [formatDigits(d.getDate()),
+				months[ d.getMonth()],
+				formatDigits(d.getFullYear())].join(" de ");
+
+			str += " a las " + [
+				formatDigits(d.getHours()), 
+				formatDigits(d.getMinutes()), 
+				formatDigits(d.getSeconds())
+			].join(':');
+			return str;
+		}
+
+		$(document).ready(function()
+		{
+			var urlParams = getUrlParams();
+			var timeTo = new Date(2014,11,18,18,0,0);
+
+			console.log(urlParams);
+			if( urlParams.t )
+			{
+				var m = urlParams.t.match(/(\d{4})(\d{2})(\d{2})(\d{2})?(\d{2})?(\d{2})?/);
+				console.log(m);
+
+				var year   = Number(m[1]);
+				var month  = Number(m[2]-1);
+				var day    = Number(m[3]);
+				var hour   = Number(m[4]? m[4] : 0);
+				var minute = Number(m[5]? m[5] : 0);
+				var second = Number(m[6]? m[6] : 0);
+				timeTo     = new Date(year,month,day,hour,minute,second);
+				console.log(timeTo);
+			}
+
+			$('#endTime').html( formatDate(timeTo) );
+			$('#endTimeBlock').show();
+
+	        $('#countdown-1').timeTo({
+				timeTo: timeTo,
+				displayDays: 2,
+				theme: "black",
+				displayCaptions: true,
+				fontSize: 88,
+				captionSize: 14,
+				lang: 'sp'
+			}, function()
+			{
+				alert('Countdown finished');
+			});
+		});
+	</script>
+
+</body>
+</html>
