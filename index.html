@@ -5,6 +5,10 @@
 	<title>Cuenta Atrás</title>
 	<link href="lib/timeTo.css" type="text/css" rel="stylesheet"/>
 	<style>
+		*
+		{
+			font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		}
 		#countdown-1, #endTimeBlock
 		{
 			position: absolute;
@@ -17,17 +21,89 @@
 
 		#endTimeBlock
 		{
-			font-family: Verdana, sans-serif;
 			font-size: 14px;
 			color: #888;
 			top: 30%;
 		}
+
+		#config-ui
+		{
+			position: absolute;
+			top:0;
+			left:0;
+			bottom: 0;
+			right: 0;
+			background-color: rgba(200,200,200,0.9);
+		}
+
+		.group
+		{
+			position: absolute;
+			top: 30%;
+			left: 20%;
+			right: 20%;
+			padding: 10px;
+			background-color: rgba(255,255,255,0.8);
+			border-radius: 15px;
+		}
+
+		.row
+		{
+			padding: 10px 10px;
+			margin: 10px 10px;
+			border-radius: 5px;
+			border: 1px solid #ddd;
+		}
+
+		.row.selected
+		{
+			border-color: #888;
+			background-color: rgba(230,230,230,0.8);
+		}
+
+		input
+		{
+			font-size: 14px;
+			text-align: center;
+		}
+
+		input[name='duration-minutes']
+		{
+			width: 40px;
+		}
+
+		#end-datetime-row
+		{
+			font-size: 14px;
+			color: #888;
+		}
+
 	</style>
 </head>
 <body>
 
 	<div id="endTimeBlock" style="display:none;">hasta el <span id="endTime"></span></div>	
 	<div id="countdown-1"></div>
+	<div id="config-ui">
+		<div class="group">
+			<div class="row" id="datetime-row">
+				<input type="radio" name="timer-type" id="datetime" value="datetime"/><label for="datetime"> hasta una fecha y hora</label>
+				<input type="date" name="datetime-date"/>
+				<input type="time" name="datetime-time"/>
+			</div>
+			<div class="row" id="endtime-row">
+				<input type="radio" name="timer-type" id="endtime" value="endtime"><label for="endtime"> hasta una hora de hoy</label>
+				<input type="time" name="endtime-time"/>
+			</div>
+			<div class="row" id="duration-row">
+				<input type="radio" name="timer-type" id="duration" value="duration"><label for="duration"> una duración determinada</label>
+				<input type="number" name="duration-minutes"/> minutos
+			</div>
+			<div class="row" id="end-datetime-row">
+				cuenta atrás que finalizará el <span id="end-datetime"></span>
+			</div>
+		</div>
+	</div>
 
 		
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -70,12 +146,67 @@
 			return str;
 		}
 
+		var state = 
+		{
+			timerType: 'duration',
+			durationMinutes: 30
+		}
+
+		function enableConfigUi()
+		{
+			$('#config-ui').show();
+			$('#config-ui input[type="radio"]').change(onRadioButtonChanged);
+			$('input[type="date"],input[type="time"],input[type="number"]').focus(onInputFocus);
+			$('#' + state.timerType).focus();
+			updateConfigUi();
+		}
+
+		function disableConfigUi()
+		{
+ 			$('#config-ui').hide();
+		}
+
+		function onRadioButtonChanged()
+		{
+			console.log('changed',this);
+			state.timerType = this.value;
+			// $(this).parent().find('input')[1].focus();
+			updateConfigUi();
+		}
+
+		function onInputFocus()
+		{
+			console.log('onInputFocus()');
+			state.timerType = $(this).parent()[0].id.slice(0,-4);
+			updateConfigUi();
+		}
+
+		function updateConfigUi()
+		{
+			console.log('updateConfigUi() state:',state);
+
+			$('.row').removeClass('selected');
+			$('#' + state.timerType + '-row').addClass('selected');
+			$('#' + state.timerType).prop('checked',true);
+
+			$('[name="duration-minutes"]').val(state.durationMinutes);
+			$('[name="endtime-time"]').val(state.endTimeTime);
+			$('[name="datetime-date"]').val(state.datetime);
+			$('[name="datetime-time"]').val(state.datetime);
+
+			$('#end-datetime').text(formatDate(new Date()));
+		}
+
 		$(document).ready(function()
 		{
 			var urlParams = getUrlParams();			
 			var timeTo = new Date( new Date().getTime() + 30*60000); // 30 min default timer
+			var configMode = urlParams.config !== undefined;
 
 			console.log(urlParams);
+
+			configMode? enableConfigUi() : disableConfigUi();
+
 			if( urlParams.dt )
 			{
 				var m = urlParams.dt.match(/(\d{4})(\d{2})(\d{2})(\d{2})?(\d{2})?(\d{2})?/);
