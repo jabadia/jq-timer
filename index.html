@@ -3,7 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Cuenta Atrás</title>
-	<link href="lib/timeTo.css" type="text/css" rel="stylesheet"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+	<link href="lib/timeTo.css" type="text/css" rel="stylesheet">
 	<style>
 		*
 		{
@@ -36,7 +37,7 @@
 			background-color: rgba(200,200,200,0.9);
 		}
 
-		.group
+		.row-group
 		{
 			position: absolute;
 			top: 30%;
@@ -49,8 +50,8 @@
 
 		.row
 		{
-			padding: 10px 10px;
 			margin: 10px 10px;
+			padding: 10px 10px;
 			border-radius: 5px;
 			border: 1px solid #ddd;
 		}
@@ -58,24 +59,43 @@
 		.row.selected
 		{
 			border-color: #888;
-			background-color: rgba(230,230,230,0.8);
-		}
-
-		input
-		{
-			font-size: 14px;
-			text-align: center;
+			background-color: rgba(230,230,230,1);
 		}
 
 		input[name='duration-minutes']
 		{
-			width: 40px;
+			width: 80px !important;
+		}
+
+		input[type=radio]
+		{
+			width: inherit;
+			height: inherit;
+			margin-right: 5px;
+			position: relative;
+			top: -3px;
+		}
+
+		.row input
+		{
+			text-align: center;
+		}
+
+		.accept-button
+		{
+			float: right;
+		}
+
+		#do-config
+		{
+			position: absolute;
+			bottom: 0px;
+			right: 0px;
 		}
 
 		#end-datetime-row
 		{
-			font-size: 14px;
-			color: #888;
+			text-align: center;
 		}
 
 	</style>
@@ -84,22 +104,36 @@
 
 	<div id="endTimeBlock" style="display:none;">hasta el <span id="endTime"></span></div>	
 	<div id="countdown-1"></div>
+	<div id="do-config">
+		<a href="?config">configurar</a>
+	</div>
 	<div id="config-ui">
-		<div class="group">
-			<div class="row" id="datetime-row">
-				<input type="radio" name="timer-type" id="datetime" value="datetime"/><label for="datetime"> hasta una fecha y hora</label>
-				<input type="date" name="datetime-date"/>
-				<input type="time" name="datetime-time"/>
+		<div class="row-group form-inline">
+			<div class="row panel" id="datetime-row">
+				<div class="radio">
+					<label for="datetime"><input class="form-control" type="radio" name="timer-type" id="datetime" value="datetime"> hasta el </label>
+				</div>
+				<input class="form-control" type="date" name="datetime-date">
+				a las 
+				<input class="form-control" type="time" name="datetime-time">
+				<button type="button" class="btn btn-success accept-button">Aceptar</button>
 			</div>
-			<div class="row" id="endtime-row">
-				<input type="radio" name="timer-type" id="endtime" value="endtime"><label for="endtime"> hasta una hora de hoy</label>
-				<input type="time" name="endtime-time"/>
+			<div class="row panel" id="endtime-row">
+				<div class="radio">
+					<label for="endtime"><input class="form-control" type="radio" name="timer-type" id="endtime" value="endtime"> hasta las </label>
+				</div>
+				<input class="form-control" type="time" name="endtime-time">
+				de hoy
+				<button type="button" class="btn btn-success accept-button">Aceptar</button>
 			</div>
-			<div class="row" id="duration-row">
-				<input type="radio" name="timer-type" id="duration" value="duration"><label for="duration"> una duración determinada</label>
-				<input type="number" name="duration-minutes"/> minutos
+			<div class="row panel" id="duration-row">
+				<div class="radio">
+					<label for="duration"><input class="form-control" type="radio" name="timer-type" id="duration" value="duration"> una duración de </label>
+				</div>
+				<input class="form-control" type="number" name="duration-minutes"> minutos
+				<button type="button" class="btn btn-success accept-button">Aceptar</button>
 			</div>
-			<div class="row" id="end-datetime-row">
+			<div class="row bg-primary text-primary" id="end-datetime-row">
 				cuenta atrás que finalizará el <span id="end-datetime"></span>
 			</div>
 		</div>
@@ -136,7 +170,7 @@
 
 			var str = [formatDigits(d.getDate()),
 				months[ d.getMonth()],
-				formatDigits(d.getFullYear())].join(" de ");
+				d.getFullYear()].join(" de ");
 
 			str += " a las " + [
 				formatDigits(d.getHours()), 
@@ -149,15 +183,24 @@
 		var state = 
 		{
 			timerType: 'duration',
-			durationMinutes: 30
-		}
+			urlFragment: null
+		};
 
 		function enableConfigUi()
 		{
 			$('#config-ui').show();
 			$('#config-ui input[type="radio"]').change(onRadioButtonChanged);
 			$('input[type="date"],input[type="time"],input[type="number"]').focus(onInputFocus);
+			$('input[type="date"],input[type="time"],input[type="number"]').change(onInputChange);
 			$('#' + state.timerType).focus();
+			$('.accept-button').click(onAccept);
+
+			var now = new Date();
+			$('[name="duration-minutes"]').val(30);
+			$('[name="endtime-time"]').val("00:00");
+			$('[name="datetime-date"]').val([now.getFullYear(),now.getMonth()+1,now.getDate()].join('-'));
+			$('[name="datetime-time"]').val("00:00");
+
 			updateConfigUi();
 		}
 
@@ -181,6 +224,16 @@
 			updateConfigUi();
 		}
 
+		function onInputChange()
+		{
+			updateConfigUi();
+		}
+
+		function onAccept()
+		{
+			window.location = ".?" + state.urlFragment;
+		}
+
 		function updateConfigUi()
 		{
 			console.log('updateConfigUi() state:',state);
@@ -189,12 +242,44 @@
 			$('#' + state.timerType + '-row').addClass('selected');
 			$('#' + state.timerType).prop('checked',true);
 
-			$('[name="duration-minutes"]').val(state.durationMinutes);
-			$('[name="endtime-time"]').val(state.endTimeTime);
-			$('[name="datetime-date"]').val(state.datetime);
-			$('[name="datetime-time"]').val(state.datetime);
+			var timeTo;
+			var now = new Date();
+			var duration, m, year, month, day, hour, minute, second;
 
-			$('#end-datetime').text(formatDate(new Date()));
+			switch( state.timerType )
+			{
+				case 'duration':
+					duration = $('[name=duration-minutes]').val();
+					timeTo = new Date(now.getTime() + duration * 60000);
+					state.urlFragment = "d=" + duration;				
+					break;
+				case 'endtime':
+					m = $('[name=endtime-time]').val().match(/(\d+):(\d+)/);
+					year   = now.getFullYear();
+					month  = now.getMonth();
+					day    = now.getDate();
+					hour   = Number(m[1]? m[1] : 0);
+					minute = Number(m[2]? m[2] : 0);
+					second = 0;
+					timeTo = new Date(year,month,day,hour,minute,second);
+					state.urlFragment = "t=" + formatDigits(hour) + formatDigits(minute);
+					break;
+				case 'datetime':
+					m = $('[name=datetime-date]').val().match(/(\d+)-(\d+)-(\d+)/);
+					year   = Number(m[1]? m[1] : 0);
+					month  = Number(m[2]? m[2] : 0);
+					day    = Number(m[3]? m[3] : 0);
+					m = $('[name=datetime-time]').val().match(/(\d+):(\d+)/);
+					hour   = Number(m[1]? m[1] : 0);
+					minute = Number(m[2]? m[2] : 0);
+					second = 0;
+					timeTo = new Date(year,month-1,day,hour,minute,second);
+					state.urlFragment = "dt=" + [year,formatDigits(month),formatDigits(day),formatDigits(hour),formatDigits(minute)].join("");
+					break;
+			}
+
+			$('#end-datetime').text(formatDate(timeTo));
+			console.log(state.urlFragment);
 		}
 
 		$(document).ready(function()
